@@ -4,14 +4,14 @@ from fastapi import HTTPException, status
 from . import models
 import logging
 
-def get_all_books(db: Session, skip: int = 0, limit: int = 100):
+def get_all_books(db: Session):
     """
     Busca todos os livros no banco de dados com tratamento de erros.
     - Lança um erro 404 se nenhum livro for encontrado.
     - Lança um erro 500 em caso de falha na consulta ao banco de dados.
     """
     try:
-        books = db.query(models.Book).offset(skip).limit(limit).all()
+        books = db.query(models.Book).all()
 
         if not books:
             raise HTTPException(

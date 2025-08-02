@@ -8,8 +8,7 @@ from .database import get_db
 
 # Cria um roteador para agrupar os endpoints de livros
 router = APIRouter(
-    prefix="/api/v1",
-    tags=["Books"] 
+    prefix="/api/v1"
 )
 
 # Endpoint de Health Check
@@ -31,7 +30,8 @@ def health_check(response: Response):
 @router.get(
     "/books",
     response_model=List[schemas.BookSchema],
-    summary="Lista todos os livros"
+    summary="Lista todos os livros",
+    tags=["Books"] 
 )
 def list_books(db: Session = Depends(get_db)):
     """

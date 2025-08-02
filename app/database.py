@@ -33,7 +33,7 @@ def check_and_populate_db():
     db = SessionLocal()
     try:
         if db.query(models.Book).first() is None:
-            logging.info("Banco de dados vazio. Iniciando população a partir do CSV...")
+            logging.info("Banco de dados vazio. Ingerindo dados a partir do CSV...")
             
             csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'books.csv')
             
