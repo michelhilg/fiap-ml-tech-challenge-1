@@ -1,6 +1,6 @@
 # Tech Challenge: API de Consulta de Livros
 
-## Descrição do Projeto
+## Descrição 
 
 O objetivo desse projeto é fornecer uma API RESTful pública, robusta e escalável, que servirá como base para futuras aplicações, como sistemas de recomendação de livros.
 
