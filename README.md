@@ -1,5 +1,61 @@
 # fiap-ml-tech-challenge-1
 
+## API com FastAPI
+
+### Como Executar a API
+
+Para iniciar o servidor da API localmente, certifique-se de que seu ambiente virtual (`venv`) está ativado e as dependências do `requirements.txt` estão instaladas.
+
+Execute o seguinte comando a partir do diretório raiz do projeto:
+
+```bash
+uvicorn api.main:app --reload
+```
+
+O servidor estará disponível em `http://127.0.0.1:8000`.
+
+### Teste Inicial (Health Check)
+
+Um endpoint de *health check* foi criado para monitorar o status da aplicação e sua conectividade com a fonte de dados.
+
+**Endpoint:** `GET /api/v1/health`
+
+Este endpoint verifica duas condições:
+
+1.  Se a aplicação FastAPI está rodando (`api_status`).
+2.  Se o arquivo de dados `data/books.csv` existe e está acessível (`data_connectivity`).
+
+#### Resultado Esperado
+
+**Cenário de Sucesso (Tudo OK):**
+
+Se o arquivo `books.csv` existir, a API retornará um status `200 OK` com o seguinte corpo:
+
+```json
+{
+  "api_status": "ok",
+  "data_connectivity": "ok"
+}
+```
+
+**Cenário de Falha (Fonte de Dados Inacessível):**
+
+Se o arquivo `books.csv` **não** for encontrado (por exemplo, o scraper ainda não foi executado), a API retornará um status `503 Service Unavailable` com o corpo:
+
+```json
+{
+  "api_status": "ok",
+  "data_connectivity": "not connected"
+}
+```
+
+### Documentação Interativa da API
+
+O FastAPI gera automaticamente uma documentação interativa. Com o servidor rodando, acesse as seguintes URLs no seu navegador para explorar e testar todos os endpoints:
+
+* **Swagger UI:** `http://127.0.0.1:8000/docs`
+* **ReDoc:** `http://127.0.0.1:8000/redoc`
+
 ## Sistema de Web Scraping
 
 O projeto inclui um script de web scraping robusto e automatizado, desenvolvido em Python, com o objetivo de extrair dados do site de e-commerce de livros [https://books.toscrape.com/](https://books.toscrape.com/).
