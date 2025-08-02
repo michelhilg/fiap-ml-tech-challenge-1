@@ -1,60 +1,212 @@
-# fiap-ml-tech-challenge-1
+# Tech Challenge: API de Consulta de Livros
 
-## API com FastAPI
+## Descrição do Projeto
 
-### Como Executar a API
+O objetivo desse projeto é fornecer uma API RESTful pública, robusta e escalável, que servirá como base para futuras aplicações, como sistemas de recomendação de livros.
 
-Para iniciar o servidor da API localmente, certifique-se de que seu ambiente virtual (`venv`) está ativado e as dependências do `requirements.txt` estão instaladas.
+Os dados são extraídos através de um script de web scraping do site [books.toscrape.com](http://books.toscrape.com/) e servidos através de uma API com FastAPI.
 
-Execute o seguinte comando a partir do diretório raiz do projeto:
+## Arquitetura
+
+O sistema é dividido em três componentes principais que garantem a modularização e a manutenibilidade do projeto.
+
+1.  **Web Scraper (`scripts/scraper.py`):**
+    * **Função:** Navega pelo site `books.toscrape.com`, extrai os detalhes de todos os livros e salva os dados brutos em um arquivo `data/books.csv`.
+
+2.  **Banco de Dados (ETL na Inicialização):**
+    * **Função:** Ao iniciar a API, um processo automatizado (`app/database.py`) é acionado. Ele verifica se o banco de dados `data/data.db` está vazio e, em caso afirmativo, lê os dados do `books.csv` e os insere na tabela `books`. 
+
+3.  **API RESTful (`app/`):**
+    * **Função:** Expõe os dados armazenados no banco de dados através de uma série de endpoints RESTful.
+
+### Estrutura de Diretórios
+
+```
+.
+├── app/              # Contém toda a lógica da API FastAPI
+│   ├── database.py   # Configuração do DB e lógica de consumo de dados
+│   ├── main.py       # Ponto de entrada da API
+│   ├── models.py     # Modelos da tabela (SQLAlchemy)
+│   ├── routes.py     # Definição dos endpoints
+│   ├── schemas.py    # Schemas de validação (Pydantic)
+│   └── services.py   # Lógica de negócio (consultas ao DB)
+├── data/             # Armazena os dados
+│   ├── books.csv     # Dados brutos do scraper
+│   └── data.db       # Banco de dados SQLite
+├── scripts/          # Scripts auxiliares
+│   └── scraper.py    # Script de web scraping
+└── requirements.txt  # Dependências do projeto
+```
+
+---
+
+## Instalação e Configuração
+
+Siga os passos abaixo para configurar o ambiente de desenvolvimento local.
+
+**Pré-requisitos:**
+* Python 3.9 ou superior
+* pip
+
+**Passos:**
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone <https://github.com/michelhilg/fiap-ml-tech-challenge-1.git>
+    cd <fiap-ml-tech-challenge-1>
+    ```
+
+2.  **Crie e ative um ambiente virtual:**
+    ```bash
+    # Cria o ambiente
+    python -m venv venv
+
+    # Ativa o ambiente (Linux/macOS)
+    source venv/bin/activate
+
+    # Ativa o ambiente (Windows)
+    .\venv\Scripts\activate
+    ```
+
+3.  **Instale as dependências:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+---
+
+## Instruções para Execução
+
+**1. Execute o Web Scraper:**
+Primeiro, execute o scraper para coletar os dados e criar o arquivo `data/books.csv`.
 
 ```bash
-uvicorn api.main:app --reload
+python scripts/scraper.py
+```
+
+**2. Inicie a API:**
+Com o arquivo `books.csv` criado, inicie o servidor da API. Na primeira execução, ele irá criar e popular o banco de dados `data.db` automaticamente.
+
+```bash
+uvicorn app.main:app --reload
 ```
 
 O servidor estará disponível em `http://127.0.0.1:8000`.
 
-### Teste Inicial (Health Check)
+---
 
-Um endpoint de *health check* foi criado para monitorar o status da aplicação e sua conectividade com a fonte de dados.
+### Documentação das Rotas da API
 
-**Endpoint:** `GET /api/v1/health`
-
-Este endpoint verifica duas condições:
-
-1.  Se a aplicação FastAPI está rodando (`api_status`).
-2.  Se o arquivo de dados `data/books.csv` existe e está acessível (`data_connectivity`).
-
-#### Resultado Esperado
-
-**Cenário de Sucesso (Tudo OK):**
-
-Se o arquivo `books.csv` existir, a API retornará um status `200 OK` com o seguinte corpo:
-
-```json
-{
-  "api_status": "ok",
-  "data_connectivity": "ok"
-}
-```
-
-**Cenário de Falha (Fonte de Dados Inacessível):**
-
-Se o arquivo `books.csv` **não** for encontrado (por exemplo, o scraper ainda não foi executado), a API retornará um status `503 Service Unavailable` com o corpo:
-
-```json
-{
-  "api_status": "ok",
-  "data_connectivity": "not connected"
-}
-```
-
-### Documentação Interativa da API
-
-O FastAPI gera automaticamente uma documentação interativa. Com o servidor rodando, acesse as seguintes URLs no seu navegador para explorar e testar todos os endpoints:
-
+A API gera documentação interativa automaticamente. Com o servidor rodando, acesse:
 * **Swagger UI:** `http://127.0.0.1:8000/docs`
 * **ReDoc:** `http://127.0.0.1:8000/redoc`
+
+Abaixo estão os detalhes dos endpoints obrigatórios.
+
+
+Abaixo estão os detalhes dos endpoints obrigatórios.
+
+### Health Check
+
+Verifica o status da API e a conexão com o banco de dados.
+
+* **Endpoint:** `GET /api/v1/health`
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    {
+      "api_status": "ok",
+      "database_status": "ok"
+    }
+    ```
+
+### Listar Todos os Livros
+
+Retorna a lista completa de livros disponíveis.
+
+* **Endpoint:** `GET /api/v1/books`
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    [
+      {
+        "id": 1,
+        "title": "A Light in the Attic",
+        "price": 51.77,
+        "rating": "Three",
+        "availability": "In stock (22 available)",
+        "category": "Poetry",
+        "image_url": "[http://books.toscrape.com/media/cache/2c/da/2cdad67c44b002e7ead0cc35693c0e8b.jpg](http://books.toscrape.com/media/cache/2c/da/2cdad67c44b002e7ead0cc35693c0e8b.jpg)"
+      }
+    ]
+    ```
+
+### Buscar Livro por ID
+
+Retorna os detalhes de um livro específico.
+
+* **Endpoint:** `GET /api/v1/books/{book_id}`
+* **Exemplo de Chamada:** `http://127.0.0.1:8000/api/v1/books/10`
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    {
+      "id": 11,
+      "title": "Starving Hearts (Triangular Trade Trilogy, #1)",
+      "price": 13.99,
+      "rating": "Two",
+      "availability": "In stock (19 available)",
+      "category": "Default",
+      "image_url": "[http://books.toscrape.com/media/cache/60/0b/600b3b22f7db9167515d4d77a22c9853.jpg](http://books.toscrape.com/media/cache/60/0b/600b3b22f7db9167515d4d77a22c9853.jpg)"
+    }
+    ```
+* **Exemplo de Resposta (Erro 404):**
+    ```json
+    {
+      "detail": "Livro com ID 9999 não encontrado."
+    }
+    ```
+
+### Buscar Livros por Título e/ou Categoria
+
+Busca livros com base em filtros.
+
+* **Endpoint:** `GET /api/v1/books/search`
+* **Parâmetros (Query):**
+    * `title` (opcional): Parte do título do livro.
+    * `category` (opcional): Nome exato da categoria.
+* **Exemplo de Chamada:** `http://127.0.0.1:8000/api/v1/books/search?title=secret&category=Mystery`
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    [
+      {
+        "id": 588,
+        "title": "The Secret Garden",
+        "price": 15.08,
+        "rating": "Four",
+        "availability": "In stock (15 available)",
+        "category": "Classics",
+        "image_url": "[http://books.toscrape.com/media/cache/98/d6/98d62641f92984443999631c1c11aee4.jpg](http://books.toscrape.com/media/cache/98/d6/98d62641f92984443999631c1c11aee4.jpg)"
+      }
+    ]
+    ```
+
+### Listar Todas as Categorias
+
+Retorna uma lista de todas as categorias únicas de livros.
+
+* **Endpoint:** `GET /api/v1/categories`
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    {
+      "categories": [
+        "Travel",
+        "Mystery",
+        "Historical Fiction",
+        "Sequential Art",
+        "Classics",
+        "..."
+      ]
+    }
+
+---
 
 ## Sistema de Web Scraping
 
@@ -68,26 +220,6 @@ O scraper foi construído para navegar por todas as páginas do site. Os dados e
 * Disponibilidade
 * Categoria
 * URL da imagem da capa
-
-### Como Executar o Scraper
-
-Para executar o script e popular a base de dados, siga os passos abaixo a partir do diretório raiz do projeto:
-
-1.  **Ative seu ambiente virtual:**
-    ```bash
-    source venv/bin/activate
-    # No Windows, o comando é: venv\Scripts\activate
-    ```
-
-2.  **Instale as dependências (caso ainda não tenha feito):**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3.  **Execute o script de scraping:**
-    ```bash
-    python scripts/scraper.py
-    ```
 
 ### O que esperar após a execução
 
