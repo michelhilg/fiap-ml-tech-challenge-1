@@ -32,6 +32,7 @@ class CategoryStatItemSchema(BaseModel):
     average_price: float
     min_price: float
     max_price: float
+    average_rating: float
 
 class CategoryStatsSchema(BaseModel):
     """ Schema para a lista de estatísticas de todas as categorias. """
