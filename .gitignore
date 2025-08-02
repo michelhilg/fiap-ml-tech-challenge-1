@@ -1,8 +1,6 @@
 /venv
 app/__pycache__
 
-app.log
-
-predictions.db
+/data
 
 .DS_Store
