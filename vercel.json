@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app/main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "app/main.py"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database-url"
+  },
+  "build": {
+    "env": {
+      "DATABASE_URL": "@database-url"
+    }
+  },
+  "functions": {
+    "app/main.py": {
+      "runtime": "python3.9"
+    }
+  },
+  "regions": ["iad1", "sfo1", "bru1"],
+  "alias": "fiap-ml-tech-challenge-1",
+  "name": "fiap-ml-tech-challenge-1",
+  "ignore": [
+    "node_modules",
+    ".git",
+    ".vscode",
+    "venv",
+    "__pycache__"
+  ]
+}
