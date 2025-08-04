@@ -4,6 +4,7 @@ from typing import List, Optional
 import os
 from . import services, schemas
 from .database import get_db
+from .auth import verify_token
 
 # Cria um roteador para agrupar os endpoints de livros
 router = APIRouter(
