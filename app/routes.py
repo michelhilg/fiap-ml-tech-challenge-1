@@ -11,6 +11,8 @@ router = APIRouter(
     prefix="/api/v1"
 )
 
+# ---- MONITORING
+
 # Endpoint de Health Check
 DB_FILE_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'data.db')
 @router.get(
@@ -154,10 +156,12 @@ def get_category_stats(db: Session = Depends(get_db)):
     stats_list = services.get_category_stats(db)
     return {"stats": stats_list}
 
+# --- AUTHENTICATION
+
 @router.post(
     "/scraping/trigger",
     summary="Executa scraping de dados e atualiza o banco (protegido)",
-    tags=["Admin"],
+    tags=["Authentication"],
     dependencies=[Depends(verify_token)]
 )
 def trigger_scraping():
