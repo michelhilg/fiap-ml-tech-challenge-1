@@ -10,10 +10,17 @@ from . import models
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configuração do Banco de Dados
-DATABASE_URL = "sqlite:///./data/data.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/data.db")
+
+# Corrige para SQLAlchemy aceitar 'postgresql://'
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
