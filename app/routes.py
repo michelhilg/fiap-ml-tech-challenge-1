@@ -153,3 +153,26 @@ def get_category_stats(db: Session = Depends(get_db)):
     """ Retorna estatísticas detalhadas para cada categoria, como contagem de livros e faixa de preço. """
     stats_list = services.get_category_stats(db)
     return {"stats": stats_list}
+
+@router.post(
+    "/scraping/trigger",
+    summary="Executa scraping de dados e atualiza o banco (protegido)",
+    tags=["Admin"],
+    dependencies=[Depends(verify_token)]
+)
+def trigger_scraping():
+    """
+    Roda o scraper para atualizar o arquivo books.csv e repopula o banco de dados.
+    Requer autenticação JWT!
+    """
+    # Executa o scraper
+    import subprocess
+    import sys
+    result = subprocess.run([sys.executable, "scripts/scraper.py"], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=f"Falha ao rodar scraper: {result.stderr}")
+
+    # Repopula o banco após o scraper rodar
+    from .services import check_and_populate_db
+    check_and_populate_db()
+    return {"msg": "Scraping concluído e base de dados atualizada."}

@@ -27,8 +27,8 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 
 def verify_token(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Credenciais inválidas",
+        status_code=401,
+        detail="Token inválido ou não fornecido",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -46,3 +46,14 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=400, detail="Usuário ou senha inválidos")
     access_token = create_access_token(data={"sub": form_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/refresh")
+def refresh_token(authorization: str = Header(...)):
+    token = authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        new_access_token = create_access_token({"sub": username})
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
