@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Depends, Response, status, HTTPException, Query
+from fastapi import APIRouter, Depends, Response, status, HTTPException, Query, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import os
 from . import services, schemas
 from .database import get_db
+from fastapi.security import OAuth2PasswordRequestForm
+from .auth import create_access_token, verify_token, FAKE_USER
+
+# Para datas/tokens
+from datetime import timedelta
 
 # Cria um roteador para agrupar os endpoints de livros
 router = APIRouter(
     prefix="/api/v1"
 )
+
+# ---- MONITORING
 
 # Endpoint de Health Check
 DB_FILE_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'data.db')
@@ -18,6 +24,12 @@ DB_FILE_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'data.db')
     tags=["Monitoring"]
 )
 def health_check(response: Response):
+    """
+    Endpoint para verificar a saúde da API e a conexão com o banco de dados.
+    Retorna um status 'ok' se a API estiver funcionando e o banco de dados estiver acessível.
+    Se o banco de dados não estiver acessível, retorna 'not connected'.
+    """
+    # Verifica se o arquivo do banco de dados existe
     if not os.path.exists(DB_FILE_PATH):
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"api_status": "ok", "database_status": "not connected"}
@@ -149,6 +161,46 @@ def get_overview_stats(db: Session = Depends(get_db)):
         summary="Estatísticas detalhadas por categoria", 
         tags=["Statistics"])
 def get_category_stats(db: Session = Depends(get_db)):
-    """ Retorna estatísticas detalhadas para cada categoria, como contagem de livros e faixa de preço. """
+    """ 
+    Retorna estatísticas detalhadas para cada categoria, como contagem de livros e faixa de preço. 
+    """
     stats_list = services.get_category_stats(db)
     return {"stats": stats_list}
+
+# --- AUTHENTICATION
+
+@router.post("/login",
+             response_model=schemas.TokenSchema,
+             summary="Realiza o login e retorna um token de acesso",
+             tags=["Authentication"])
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    Endpoint para realizar o login e retornar um token de acesso.
+    O token deve ser usado para acessar endpoints protegidos.
+    O usuário e senha devem ser passados no corpo da requisição como 'application/x-www-form-urlencoded'.
+    """
+    if (form_data.username != FAKE_USER["username"] or 
+        form_data.password != FAKE_USER["password"]):
+        raise HTTPException(status_code=400, detail="Usuário ou senha inválidos")
+    access_token = create_access_token(data={"sub": form_data.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/refresh",
+             response_model=schemas.TokenSchema,
+             summary="Renova o token de acesso",
+             tags=["Authentication"])
+def refresh_token(authorization: str = Header(...)):
+    """
+    Endpoint para renovar o token de acesso usando o token atual.
+    O token deve ser passado no header Authorization como 'Bearer <token>'.
+    """
+    from jose import jwt
+    from .auth import SECRET_KEY, ALGORITHM
+    token = authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        new_access_token = create_access_token({"sub": username})
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
