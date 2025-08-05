@@ -5,6 +5,7 @@ from . import services, schemas
 from .database import get_db
 from fastapi.security import OAuth2PasswordRequestForm
 from .auth import create_access_token, verify_token, FAKE_USER
+import os
 
 # Para datas/tokens
 from datetime import timedelta
@@ -170,7 +171,7 @@ def get_category_stats(db: Session = Depends(get_db)):
 # --- AUTHENTICATION
 
 @router.post("/login",
-             response_model=schemas.TokenSchema,
+             #response_model=schemas.TokenSchema,
              summary="Realiza o login e retorna um token de acesso",
              tags=["Authentication"])
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -186,7 +187,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/refresh",
-             response_model=schemas.TokenSchema,
+             #response_model=schemas.TokenSchema,
              summary="Renova o token de acesso",
              tags=["Authentication"])
 def refresh_token(authorization: str = Header(...)):
