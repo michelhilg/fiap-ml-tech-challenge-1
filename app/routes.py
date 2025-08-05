@@ -24,6 +24,12 @@ DB_FILE_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'data.db')
     tags=["Monitoring"]
 )
 def health_check(response: Response):
+    """
+    Endpoint para verificar a saúde da API e a conexão com o banco de dados.
+    Retorna um status 'ok' se a API estiver funcionando e o banco de dados estiver acessível.
+    Se o banco de dados não estiver acessível, retorna 'not connected'.
+    """
+    # Verifica se o arquivo do banco de dados existe
     if not os.path.exists(DB_FILE_PATH):
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"api_status": "ok", "database_status": "not connected"}
