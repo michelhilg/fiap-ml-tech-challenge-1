@@ -168,6 +168,10 @@ def get_category_stats(db: Session = Depends(get_db)):
              summary="Realiza o login e retorna um token de acesso",
              tags=["Authentication"])
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    Endpoint para realizar o login e retornar um token de acesso.
+    O token deve ser usado para acessar endpoints protegidos.
+    O usuário e senha devem ser passados no corpo da requisição como 'application/x-www-form-urlencoded'."""
     if (form_data.username != FAKE_USER["username"] or 
         form_data.password != FAKE_USER["password"]):
         raise HTTPException(status_code=400, detail="Usuário ou senha inválidos")
