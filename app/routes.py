@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, Response, status, HTTPException, Query
+from fastapi import APIRouter, Depends, Response, status, HTTPException, Query, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import os
 from . import services, schemas
 from .database import get_db
-from .auth import verify_token
+from fastapi.security import OAuth2PasswordRequestForm
+from .auth import create_access_token, verify_token, FAKE_USER
+
+# Para datas/tokens
+from datetime import timedelta
 
 # Cria um roteador para agrupar os endpoints de livros
 router = APIRouter(
@@ -152,31 +155,41 @@ def get_overview_stats(db: Session = Depends(get_db)):
         summary="Estatísticas detalhadas por categoria", 
         tags=["Statistics"])
 def get_category_stats(db: Session = Depends(get_db)):
-    """ Retorna estatísticas detalhadas para cada categoria, como contagem de livros e faixa de preço. """
+    """ 
+    Retorna estatísticas detalhadas para cada categoria, como contagem de livros e faixa de preço. 
+    """
     stats_list = services.get_category_stats(db)
     return {"stats": stats_list}
 
 # --- AUTHENTICATION
 
-@router.post(
-    "/scraping/trigger",
-    summary="Executa scraping de dados e atualiza o banco (protegido)",
-    tags=["Authentication"],
-    dependencies=[Depends(verify_token)]
-)
-def trigger_scraping():
-    """
-    Roda o scraper para atualizar o arquivo books.csv e repopula o banco de dados.
-    Requer autenticação JWT!
-    """
-    # Executa o scraper
-    import subprocess
-    import sys
-    result = subprocess.run([sys.executable, "scripts/scraper.py"], capture_output=True, text=True)
-    if result.returncode != 0:
-        raise HTTPException(status_code=500, detail=f"Falha ao rodar scraper: {result.stderr}")
+@router.post("/login",
+             response_model=schemas.TokenSchema,
+             summary="Realiza o login e retorna um token de acesso",
+             tags=["Authentication"])
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if (form_data.username != FAKE_USER["username"] or 
+        form_data.password != FAKE_USER["password"]):
+        raise HTTPException(status_code=400, detail="Usuário ou senha inválidos")
+    access_token = create_access_token(data={"sub": form_data.username})
+    return {"access_token": access_token, "token_type": "bearer"}
 
-    # Repopula o banco após o scraper rodar
-    from .services import check_and_populate_db
-    check_and_populate_db()
-    return {"msg": "Scraping concluído e base de dados atualizada."}
+@router.post("/refresh",
+             response_model=schemas.TokenSchema,
+             summary="Renova o token de acesso",
+             tags=["Authentication"])
+def refresh_token(authorization: str = Header(...)):
+    """
+    Endpoint para renovar o token de acesso usando o token atual.
+    O token deve ser passado no header Authorization como 'Bearer <token>'.
+    """
+    from jose import jwt
+    from .auth import SECRET_KEY, ALGORITHM
+    token = authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        new_access_token = create_access_token({"sub": username})
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado")
