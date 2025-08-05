@@ -6,9 +6,8 @@ from .database import get_db
 from fastapi.security import OAuth2PasswordRequestForm
 from .auth import create_access_token, verify_token, FAKE_USER
 import os
-
-# Para datas/tokens
-from datetime import timedelta
+from jose import jwt
+from .auth import SECRET_KEY, ALGORITHM
 
 # Cria um roteador para agrupar os endpoints de livros
 router = APIRouter(
@@ -171,7 +170,7 @@ def get_category_stats(db: Session = Depends(get_db)):
 # --- AUTHENTICATION
 
 @router.post("/login",
-             #response_model=schemas.TokenSchema,
+             response_model=schemas.TokenSchema,
              summary="Realiza o login e retorna um token de acesso",
              tags=["Authentication"])
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -187,7 +186,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/refresh",
-             #response_model=schemas.TokenSchema,
+             response_model=schemas.TokenSchema,
              summary="Renova o token de acesso",
              tags=["Authentication"])
 def refresh_token(authorization: str = Header(...)):
@@ -195,8 +194,6 @@ def refresh_token(authorization: str = Header(...)):
     Endpoint para renovar o token de acesso usando o token atual.
     O token deve ser passado no header Authorization como 'Bearer <token>'.
     """
-    from jose import jwt
-    from .auth import SECRET_KEY, ALGORITHM
     token = authorization.split(" ")[1]
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
