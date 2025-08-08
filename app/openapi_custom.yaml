@@ -1,0 +1,346 @@
+openapi: 3.1.0
+info:
+  title: API de Consulta de Livros
+  description: Uma API para consulta de dados de livros extraídos via web scraping.
+  version: 0.1.0
+paths:
+  /api/v1/health:
+    get:
+      tags:
+        - Monitoring
+      summary: Verifica a saúde da API e conexão com o banco de dados
+      operationId: health_check_api_v1_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/books:
+    get:
+      tags:
+        - Books
+      summary: Lista todos os livros
+      description: Retorna uma lista de TODOS os livros disponíveis na base de dados.
+      operationId: list_books_api_v1_books_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookSchema'
+                title: Response List Books Api V1 Books Get
+  /api/v1/books/search:
+    get:
+      tags:
+        - Books
+      summary: Busca livros por título e/ou categoria
+      description: |
+        Busca livros que correspondam a um título e/ou categoria.
+        - Pelo menos um dos parâmetros (`title` ou `category`) deve ser fornecido.
+        - A busca por título é por similaridade e não diferencia maiúsculas de minúsculas.
+        - A busca por categoria é exata.
+      operationId: search_for_books_api_v1_books_search_get
+      parameters:
+        - name: title
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            title: Title
+        - name: category
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: 'null'
+            title: Category
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookSchema'
+                title: Response Search For Books Api V1 Books Search Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/books/top-rated:
+    get:
+      tags:
+        - Books
+      summary: Lista os livros com melhor avaliação
+      description: Retorna uma lista de livros com a avaliação máxima ('Five').
+      operationId: get_top_rated_api_v1_books_top_rated_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookSchema'
+                title: Response Get Top Rated Api V1 Books Top Rated Get
+  /api/v1/books/price-range:
+    get:
+      tags:
+        - Books
+      summary: Filtra livros por faixa de preço
+      description: Filtra livros cujo preço esteja entre `min_price` e `max_price`.
+      operationId: get_by_price_range_api_v1_books_price_range_get
+      parameters:
+        - name: min_price
+          in: query
+          required: true
+          schema:
+            type: number
+            exclusiveMinimum: 0
+            description: Preço mínimo.
+            title: Min Price
+          description: Preço mínimo.
+        - name: max_price
+          in: query
+          required: true
+          schema:
+            type: number
+            exclusiveMinimum: 0
+            description: Preço máximo.
+            title: Max Price
+          description: Preço máximo.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookSchema'
+                title: Response Get By Price Range Api V1 Books Price Range Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/books/{book_id}:
+    get:
+      tags:
+        - Books
+      summary: Retorna um livro específico pelo ID
+      description: Retorna os detalhes completos de um livro específico com base no seu ID.
+      operationId: get_book_details_api_v1_books__book_id__get
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            title: Book Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookSchema'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/categories:
+    get:
+      tags:
+        - Categories
+      summary: Lista todas as categorias de livros
+      description: Retorna uma lista com todas as categorias de livros únicas disponíveis.
+      operationId: list_categories_api_v1_categories_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListSchema'
+  /api/v1/stats/overview:
+    get:
+      tags:
+        - Statistics
+      summary: Estatísticas gerais da coleção
+      description: Retorna estatísticas gerais, como total de livros, preço médio e distribuição de avaliações.
+      operationId: get_overview_stats_api_v1_stats_overview_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewStatsSchema'
+  /api/v1/stats/categories:
+    get:
+      tags:
+        - Statistics
+      summary: Estatísticas detalhadas por categoria
+      description: Retorna estatísticas detalhadas para cada categoria, como contagem de livros e faixa de preço.
+      operationId: get_category_stats_api_v1_stats_categories_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryStatsSchema'
+components:
+  schemas:
+    BookSchema:
+      title: BookSchema
+      description: Schema para um único livro.
+      required:
+        - id
+        - title
+        - price
+        - rating
+        - availability
+        - category
+        - image_url
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        title:
+          type: string
+          title: Title
+        price:
+          type: number
+          title: Price
+        rating:
+          type: string
+          title: Rating
+        availability:
+          type: string
+          title: Availability
+        category:
+          type: string
+          title: Category
+        image_url:
+          type: string
+          title: Image Url
+    CategoryListSchema:
+      title: CategoryListSchema
+      description: Schema para a lista de categorias de livros.
+      required:
+        - categories
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+          title: Categories
+    CategoryStatItemSchema:
+      title: CategoryStatItemSchema
+      description: Schema para as estatísticas de uma única categoria.
+      required:
+        - category
+        - book_count
+        - average_price
+        - min_price
+        - max_price
+        - average_rating
+      type: object
+      properties:
+        category:
+          type: string
+          title: Category
+        book_count:
+          type: integer
+          title: Book Count
+        average_price:
+          type: number
+          title: Average Price
+        min_price:
+          type: number
+          title: Min Price
+        max_price:
+          type: number
+          title: Max Price
+        average_rating:
+          type: number
+          title: Average Rating
+    CategoryStatsSchema:
+      title: CategoryStatsSchema
+      description: Schema para a lista de estatísticas de todas as categorias.
+      required:
+        - stats
+      type: object
+      properties:
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryStatItemSchema'
+          title: Stats
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+    OverviewStatsSchema:
+      title: OverviewStatsSchema
+      description: Schema para as estatísticas gerais da coleção.
+      required:
+        - total_books
+        - average_price
+        - rating_distribution
+      type: object
+      properties:
+        total_books:
+          type: integer
+          title: Total Books
+        average_price:
+          type: number
+          title: Average Price
+        rating_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+          title: Rating Distribution
+    ValidationError:
+      title: ValidationError
+      required:
+        - loc
+        - msg
+        - type
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type

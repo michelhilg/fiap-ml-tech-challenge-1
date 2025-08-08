@@ -4,11 +4,33 @@ from typing import List, Optional
 import os
 from . import services, schemas
 from .database import get_db
+from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html
+from pathlib import Path
+import yaml
 
 # Cria um roteador para agrupar os endpoints de livros
-router = APIRouter(
-    prefix="/api/v1"
-)
+router = APIRouter()
+
+
+# Caminho do YAML
+OPENAPI_YAML_PATH = Path(__file__).parent / "openapi_custom.yaml"
+
+with open(OPENAPI_YAML_PATH, "r", encoding="utf-8") as f:
+    custom_openapi = yaml.safe_load(f)
+
+# Rota para retornar o OpenAPI customizado
+@router.get("/openapi.json", include_in_schema=False)
+async def get_openapi_custom():
+    return JSONResponse(content=custom_openapi)
+
+# Rota para exibir o Swagger UI usando o YAML customizado
+@router.get("/docs", include_in_schema=False)
+async def custom_docs():
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title=custom_openapi.get("info", {}).get("title", "Documentação da API")
+    )
 
 # Endpoint de Health Check
 DB_FILE_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'data.db')
