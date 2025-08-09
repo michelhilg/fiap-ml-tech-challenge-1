@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from . import ml_services as services, ml_schemas as schemas 
+from . import ml_services as services
+from . import ml_schemas as schemas
 from ..database import get_db
 
 router = APIRouter(
