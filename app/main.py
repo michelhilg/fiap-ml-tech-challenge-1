@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from . import models, routes
-from .database import engine, check_and_populate_db  # ou .services, se mudou
+from .database import engine, check_and_populate_db 
+from .ml import ml_routes 
 
 # Cria as tabelas no banco de dados
 models.Base.metadata.create_all(bind=engine)
@@ -17,5 +18,8 @@ app = FastAPI(
 def on_startup():
     check_and_populate_db() 
 
+# Inclui os roteadores na aplicação
 app.include_router(routes.router)
+app.include_router(ml_routes.router)
+
     
