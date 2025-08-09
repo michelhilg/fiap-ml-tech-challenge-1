@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, JSON
+from sqlalchemy import Column, Integer, Float, String
 from ..database import Base
 
 class BookFeature(Base):
@@ -9,9 +9,8 @@ class BookFeature(Base):
     __tablename__ = "ml_data"
 
     id = Column(Integer, primary_key=True, index=True)
-    book_id = Column(Integer) 
+    book_id = Column(Integer) #FK
     price = Column(Float)
     rating_numeric = Column(Integer)
     availability_numeric = Column(Integer)
-    # Armazena as colunas de categoria (one-hot encoded) como um objeto JSON
-    category_features = Column(JSON)
+    category = Column(String)

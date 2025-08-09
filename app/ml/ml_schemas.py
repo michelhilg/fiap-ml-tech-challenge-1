@@ -3,19 +3,24 @@ from typing import List, Dict, Any
 
 class BookFeatureSchema(BaseModel):
     """
-    Schema para os dados de um livro formatados como features para um modelo.
+    Schema para a resposta do endpoint /features
     """
     id: int
+    book_id: int
     price: float
     rating_numeric: int
     availability_numeric: int
-    category: str
+    category: str # A categoria é retornada como string
 
-class TrainingDataSchema(BaseModel):
+    class Config:
+        from_attributes = True
+
+class TrainingDataResponseSchema(BaseModel):
     """
-    Schema para o dataset de treinamento completo.
+    Schema para a resposta do endpoint /training-data
     """
-    dataset: List[Dict[str, Any]]
+    # O dataset final é uma lista de dicionários com One-Hot Encoding para categorias
+    training_dataset: List[Dict[str, Any]]
 
 class PredictionRequestSchema(BaseModel):
     """
