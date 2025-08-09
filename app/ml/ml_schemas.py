@@ -19,8 +19,7 @@ class TrainingDataResponseSchema(BaseModel):
     """
     Schema para a resposta do endpoint /training-data
     """
-    # O dataset final é uma lista de dicionários com One-Hot Encoding para categorias
-    training_dataset: List[Dict[str, Any]]
+    training_dataset: List[BookFeatureSchema]
 
 class PredictionRequestSchema(BaseModel):
     """

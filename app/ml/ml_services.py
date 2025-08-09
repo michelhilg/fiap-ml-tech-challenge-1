@@ -4,7 +4,6 @@ import re
 import logging
 from typing import List, Dict, Any
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
 from .. import models
 from . import ml_schemas as schemas
 from . import ml_models
@@ -55,31 +54,17 @@ def process_and_save_features(db: Session) -> List[ml_models.BookFeature]:
         logging.error(f"Erro ao salvar features no banco de dados: {e}")
         raise HTTPException(status_code=500, detail="Falha ao salvar features processadas.")
 
-def get_encoded_training_data(db: Session) -> List[Dict[str, Any]]:
+def get_training_data(db: Session) -> List[ml_models.BookFeature]:
     """
-    Lê os dados da tabela 'ml_data', aplica One-Hot Encoding na categoria e retorna o dataset final pronto para treinamento.
-    - Lança um erro 404 se não encontrar dados na tabela 'ml_data'.
+    Lê os dados da tabela 'ml_data' e os retorna.
     """
-    logging.info("Iniciando a preparação do dataset de treinamento com One-Hot Encoding...")
+    logging.info("Buscando dados da tabela de features 'ml_data'...")
     
     features_from_db = db.query(ml_models.BookFeature).all()
     if not features_from_db:
         raise HTTPException(status_code=404, detail="Nenhum dado encontrado na tabela 'ml_data'. Execute o endpoint /features primeiro.")
-
-    df = pd.DataFrame([f.__dict__ for f in features_from_db])
     
-    # Remover colunas desnecessárias do SQLAlchemy e a chave primária da tabela de features
-    df = df.drop(columns=['_sa_instance_state', 'id'])
-
-    encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
-    category_encoded = encoder.fit_transform(df[['category']])
-    category_df = pd.DataFrame(category_encoded, columns=encoder.get_feature_names_out(['category']))
-
-    # Juntar os dataframes, removendo a coluna original de categoria
-    final_df = df.drop(columns=['category']).join(category_df)
-    
-    # Converter o dataframe final para uma lista de dicionários para a resposta JSON
-    return final_df.to_dict(orient='records')
+    return features_from_db
 
 def make_prediction(request_data: schemas.PredictionRequestSchema) -> schemas.PredictionResponseSchema:
     """

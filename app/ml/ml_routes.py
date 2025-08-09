@@ -26,14 +26,12 @@ def get_and_save_features(db: Session = Depends(get_db)):
 @router.get(
     "/training-data", 
     response_model=schemas.TrainingDataResponseSchema, 
-    summary="Dataset com One-Hot Encoding"
-)
-def get_training_data(db: Session = Depends(get_db)):
+    summary="Dataset pré-processado para treinamento")
+def get_training_data_route(db: Session = Depends(get_db)):
     """
-    Lê os dados da tabela 'ml_data', aplica One-Hot Encoding na categoria
-    e retorna o dataset final pronto para o treinamento de modelos.
+    Lê os dados da tabela 'ml_data' e os retorna.
     """
-    dataset = services.get_encoded_training_data(db)
+    dataset = services.get_training_data(db)
     return {"training_dataset": dataset}
 
 @router.post(
