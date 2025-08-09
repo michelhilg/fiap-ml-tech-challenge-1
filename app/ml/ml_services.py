@@ -25,7 +25,7 @@ def process_and_save_features(db: Session) -> List[ml_models.BookFeature]:
 
     rating_map = {'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5}
     df['rating_numeric'] = df['rating'].map(rating_map).fillna(0).astype(int)
-    df['availability_numeric'] = df['availability'].str.extract(r'\((\d+)\)').fillna(0).astype(int)
+    df['availability_numeric'] = df['availability'].str.extract(r'(\d+)', expand=False).fillna(0).astype(int)
 
     features_df = df[['id', 'price', 'rating_numeric', 'availability_numeric', 'category']]
 
