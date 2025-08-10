@@ -235,19 +235,18 @@ Estes endpoints foram criados para facilitar o ciclo de vida de modelos de ML.
 
 #### Obter Dataset de Treinamento
 * **Endpoint:** `GET /api/v1/ml/training-data`
-* **Descrição:** Lê os dados da tabela `ml_data` (criada pelo endpoint `/features`), aplica **One-Hot Encoding** na coluna `category` e retorna o dataset final, pronto para ser usado no treinamento de um modelo.
+* **Descrição:** Lê os dados da tabela `ml_data` (criada pelo endpoint `/features`) e retorna o dataset final, pronto para ser usado no treinamento de um modelo.
 * **Exemplo de Resposta (Sucesso):**
     ```json
     {
       "training_dataset": [
         {
+          "id": 1,
           "book_id": 1,
           "price": 51.77,
           "rating_numeric": 3,
           "availability_numeric": 22,
-          "category_Art": 0,
-          "category_Business": 0,
-          "category_Poetry": 1
+          "category": "Poetry"
         }
       ]
     }

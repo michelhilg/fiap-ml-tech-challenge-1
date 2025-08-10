@@ -4,6 +4,7 @@ from typing import List
 from . import ml_services as services
 from . import ml_schemas as schemas
 from ..database import get_db
+from ..auth import verify_token
 
 router = APIRouter(
     prefix="/api/v1/ml",
@@ -13,7 +14,8 @@ router = APIRouter(
 @router.get(
     "/features", 
     response_model=List[schemas.BookFeatureSchema], 
-    summary="Processa e salva features básicas"
+    summary="Processa e salva features básicas",
+    dependencies=[Depends(verify_token)]
 )
 def get_and_save_features(db: Session = Depends(get_db)):
     """
@@ -26,9 +28,12 @@ def get_and_save_features(db: Session = Depends(get_db)):
 @router.get(
     "/training-data", 
     response_model=schemas.TrainingDataResponseSchema, 
-    summary="Dataset pré-processado para treinamento")
+    summary="Dataset pré-processado para treinamento",
+    dependencies=[Depends(verify_token)]
+)
 def get_training_data_route(db: Session = Depends(get_db)):
     """
+    (Rota Protegida) 
     Lê os dados da tabela 'ml_data' e os retorna.
     """
     dataset = services.get_training_data(db)
@@ -37,7 +42,8 @@ def get_training_data_route(db: Session = Depends(get_db)):
 @router.post(
     "/predictions", 
     response_model=schemas.PredictionResponseSchema, 
-    summary="Endpoint para receber predições"
+    summary="Endpoint para receber predições",
+    dependencies=[Depends(verify_token)]
 )
 def create_prediction(request: schemas.PredictionRequestSchema):
     """Endpoint para receber dados de entrada e retornar uma predição simulada."""
