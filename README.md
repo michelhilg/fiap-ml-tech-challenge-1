@@ -108,6 +108,26 @@ A API gera documentação interativa automaticamente. Com o servidor rodando, ac
 * **Swagger UI:** `http://127.0.0.1:8000/docs`
 * **ReDoc:** `http://127.0.0.1:8000/redoc`
 
+---
+
+### Endpoints de Autenticação
+
+Para acessar as rotas protegidas (rotas de ML), primeiro obtenha um token de acesso.
+
+#### Realizar Login
+* **Endpoint:** `POST /api/v1/login`
+* **Descrição:** Autentica o usuário e retorna um token de acesso JWT.
+* **Credenciais:**
+    * `username`: `admin`
+    * `password`: `admin123`
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "token_type": "bearer"
+    }
+    ```
+
 ### Endpoints de Negócio
 
 #### Health Check
@@ -215,6 +235,8 @@ Retorna uma lista de todas as categorias únicas de livros.
 ### Endpoints de Machine Learning
 
 Estes endpoints foram criados para facilitar o ciclo de vida de modelos de ML.
+
+**Atenção:** Todos os endpoints nesta seção requerem autenticação. Você deve primeiro obter um token através do endpoint `/login` e incluí-lo no header `Authorization` como `Bearer <seu_token>`.
 
 #### Processar e Salvar Features
 * **Endpoint:** `GET /api/v1/ml/features`
