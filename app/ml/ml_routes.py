@@ -19,6 +19,7 @@ router = APIRouter(
 )
 def get_and_save_features(db: Session = Depends(get_db)):
     """
+    (Rota Protegida) 
     Processa dados da tabela 'books', cria features numéricas, salva o
     resultado na tabela 'ml_data' e retorna os dados salvos.
     A coluna 'category' permanece como string.
@@ -46,5 +47,8 @@ def get_training_data_route(db: Session = Depends(get_db)):
     dependencies=[Depends(verify_token)]
 )
 def create_prediction(request: schemas.PredictionRequestSchema):
-    """Endpoint para receber dados de entrada e retornar uma predição simulada."""
+    """
+    (Rota Protegida) 
+    Endpoint para receber dados de entrada e retornar uma predição simulada.
+    """
     return services.make_prediction(request)
