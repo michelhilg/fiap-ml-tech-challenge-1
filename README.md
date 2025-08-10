@@ -6,6 +6,9 @@ O objetivo desse projeto é fornecer uma API RESTful pública, robusta e escalá
 
 Os dados são extraídos através de um script de web scraping do site [books.toscrape.com](http://books.toscrape.com/) e servidos através de uma API com FastAPI.
 
+> **API Pública para Testes:** Uma versão desta API está disponível para testes e demonstração no seguinte endereço (Swagger UI): 
+> **https://fiap-ml-tech-challenge-1-nine.vercel.app/docs**
+
 ## Arquitetura
 
 O sistema é dividido em três componentes principais que garantem a modularização e a manutenibilidade do projeto.
