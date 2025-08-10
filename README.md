@@ -11,6 +11,10 @@ Os dados são extraídos através de um script de web scraping do site [books.to
 
 ## Arquitetura
 
+O fluxo de dados do projeto foi desenhado para ser simples, modular e eficaz, seguindo quatro etapas distintas:
+
+![Pipeline de ingestão](docs/pipeline.png)
+
 O sistema é dividido em três componentes principais que garantem a modularização e a manutenibilidade do projeto.
 
 1.  **Web Scraper (`scripts/scraper.py`):**
