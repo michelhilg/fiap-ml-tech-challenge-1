@@ -2,6 +2,7 @@
 /venv
 
 # Pastas de cache do Python
+app/ml/__pycache__
 app/__pycache__
 
 # Arquivo de metadados do sistema operacional macOS
