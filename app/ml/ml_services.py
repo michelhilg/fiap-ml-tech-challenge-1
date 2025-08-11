@@ -8,13 +8,12 @@ from .. import models
 from . import ml_schemas as schemas
 from . import ml_models
 
-def process_and_save_features(db: Session) -> List[ml_models.BookFeature]:
+def process_and_return_features(db: Session) -> List[schemas.BookFeatureSchema]:
     """
-    Processa os dados da tabela 'books', cria features numéricas e salva o resultado na tabela 'ml_data'.
-    - Lança um erro 404 se não encontrar livros na tabela 'books'.
-    - Lança um erro 500 se ocorrer um erro ao salvar os dados processados.
+    Processa os dados da tabela 'books', cria features numéricas e
+    retorna o resultado diretamente, sem salvar no banco de dados.
     """
-    logging.info("Iniciando o processo de criação de features na tabela 'ml_data'...")
+    logging.info("Iniciando o processo de criação de features em memória...")
     
     all_books = db.query(models.Book).all()
     if not all_books:
@@ -24,47 +23,31 @@ def process_and_save_features(db: Session) -> List[ml_models.BookFeature]:
 
     rating_map = {'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5}
     df['rating_numeric'] = df['rating'].map(rating_map).fillna(0).astype(int)
+    
     df['availability_numeric'] = df['availability'].str.extract(r'(\d+)', expand=False).fillna(0).astype(int)
 
-    features_df = df[['id', 'price', 'rating_numeric', 'availability_numeric', 'category']]
-
-    try:
-        db.query(ml_models.BookFeature).delete()
-        logging.info("Tabela 'ml_data' limpa com sucesso.")
-
-        features_to_save = []
-        for _, row in features_df.iterrows():
-            feature_instance = ml_models.BookFeature(
-                book_id=int(row['id']),
-                price=float(row['price']),
-                rating_numeric=int(row['rating_numeric']),
-                availability_numeric=int(row['availability_numeric']),
-                category=str(row['category'])
-            )
-            features_to_save.append(feature_instance)
-        
-        db.add_all(features_to_save)
-        db.commit()
-        logging.info(f"{len(features_to_save)} registros de features foram salvos em 'ml_data'.")
-        
-        return db.query(ml_models.BookFeature).all()
-
-    except Exception as e:
-        db.rollback()
-        logging.error(f"Erro ao salvar features no banco de dados: {e}")
-        raise HTTPException(status_code=500, detail="Falha ao salvar features processadas.")
-
-def get_training_data(db: Session) -> List[ml_models.BookFeature]:
-    """
-    Lê os dados da tabela 'ml_data' e os retorna.
-    """
-    logging.info("Buscando dados da tabela de features 'ml_data'...")
+    # Prepara a lista de features para retornar
+    feature_list = []
+    for _, row in df.iterrows():
+        feature_list.append(schemas.BookFeatureSchema(
+            id=int(row['id']), # Usamos o ID original do livro
+            book_id=int(row['id']),
+            price=float(row['price']),
+            rating_numeric=int(row['rating_numeric']),
+            availability_numeric=int(row['availability_numeric']),
+            category=str(row['category'])
+        ))
     
-    features_from_db = db.query(ml_models.BookFeature).all()
-    if not features_from_db:
-        raise HTTPException(status_code=404, detail="Nenhum dado encontrado na tabela 'ml_data'. Execute o endpoint /features primeiro.")
-    
-    return features_from_db
+    logging.info(f"{len(feature_list)} registros de features processados em memória.")
+    return feature_list
+
+def get_training_data(db: Session) -> List[schemas.BookFeatureSchema]:
+    """
+    Processa as features da mesma forma que o endpoint /features e as retorna.
+    Esta função agora atua como um alias para manter a consistência do endpoint.
+    """
+    logging.info("Chamando a lógica de processamento de features para o dataset de treinamento...")
+    return process_and_return_features(db)
 
 def make_prediction(request_data: schemas.PredictionRequestSchema) -> schemas.PredictionResponseSchema:
     """
