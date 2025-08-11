@@ -3,6 +3,8 @@ from . import models, routes
 from .database import engine, check_and_populate_db
 from pathlib import Path
 import yaml
+from .ml import ml_routes 
+from .config import api_description, servers
 
 # Cria as tabelas no banco
 models.Base.metadata.create_all(bind=engine)

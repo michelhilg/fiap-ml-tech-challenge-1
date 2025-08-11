@@ -37,3 +37,8 @@ class CategoryStatItemSchema(BaseModel):
 class CategoryStatsSchema(BaseModel):
     """ Schema para a lista de estatísticas de todas as categorias. """
     stats: List[CategoryStatItemSchema]
+
+class TokenSchema(BaseModel):
+    """ Schema para o token de autenticação. """
+    access_token: str
+    token_type: str

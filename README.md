@@ -6,7 +6,14 @@ O objetivo desse projeto é fornecer uma API RESTful pública, robusta e escalá
 
 Os dados são extraídos através de um script de web scraping do site [books.toscrape.com](http://books.toscrape.com/) e servidos através de uma API com FastAPI.
 
+> **API Pública para Testes:** Uma versão desta API está disponível para testes e demonstração no seguinte endereço (Swagger UI): 
+> **https://fiap-ml-tech-challenge-1-nine.vercel.app/docs**
+
 ## Arquitetura
+
+O fluxo de dados do projeto foi desenhado para ser simples, modular e eficaz, seguindo quatro etapas distintas:
+
+![Pipeline de ingestão](docs/pipeline.png)
 
 O sistema é dividido em três componentes principais que garantem a modularização e a manutenibilidade do projeto.
 
@@ -19,23 +26,33 @@ O sistema é dividido em três componentes principais que garantem a modulariza�
 3.  **API RESTful (`app/`):**
     * **Função:** Expõe os dados armazenados no banco de dados através de uma série de endpoints RESTful.
 
+> Para uma visão mais detalhada da arquitetura do projeto, incluindo planos de escalabilidade e integração com modelos de ML, consulte o documento de **Plano Arquitetural** localizado na pasta `/docs`.
+
 ### Estrutura de Diretórios
+
+A estrutura foi organizada em módulos para separar as responsabilidades da API geral das de Machine Learning.
 
 ```
 .
-├── app/              # Contém toda a lógica da API FastAPI
-│   ├── database.py   # Configuração do DB e lógica de consumo de dados
-│   ├── main.py       # Ponto de entrada da API
-│   ├── models.py     # Modelos da tabela (SQLAlchemy)
-│   ├── routes.py     # Definição dos endpoints
-│   ├── schemas.py    # Schemas de validação (Pydantic)
-│   └── services.py   # Lógica de negócio (consultas ao DB)
-├── data/             # Armazena os dados
-│   ├── books.csv     # Dados brutos do scraper
-│   └── data.db       # Banco de dados SQLite
-├── scripts/          # Scripts auxiliares
-│   └── scraper.py    # Script de web scraping
-└── requirements.txt  # Dependências do projeto
+├── app/                  # Contém toda a lógica da API FastAPI
+│   ├── database.py       # Configuração do DB e lógica de consumo de dados
+│   ├── main.py           # Ponto de entrada da API
+│   ├── models.py         # Modelos da tabela de negócio (books)
+│   ├── routes.py         # Endpoints de negócio
+│   ├── schemas.py        # Schemas de validação de negócio
+│   ├── services.py       # Lógica de negócio (consultas ao DB)
+│   └── ml/               # Módulo dedicado para Machine Learning
+│       ├── ml_models.py
+│       ├── ml_routes.py
+│       ├── ml_schemas.py
+│       └── ml_services.py
+├── data/                 # Armazena os dados
+│   ├── books.csv         # Dados brutos do scraper
+│   └── data.db           # Banco de dados SQLite
+├── docs/                 # Armazena documentações do projeto
+├── scripts/              # Scripts auxiliares
+│   └── scraper.py        # Script de web scraping
+└── requirements.txt      # Dependências do projeto
 ```
 
 ---
@@ -95,18 +112,34 @@ O servidor estará disponível em `http://127.0.0.1:8000`.
 
 ---
 
-### Documentação das Rotas da API
+## Documentação e Rotas da API
 
 A API gera documentação interativa automaticamente. Com o servidor rodando, acesse:
 * **Swagger UI:** `http://127.0.0.1:8000/docs`
 * **ReDoc:** `http://127.0.0.1:8000/redoc`
 
-Abaixo estão os detalhes dos endpoints obrigatórios.
 
+### Endpoints de Autenticação
 
-Abaixo estão os detalhes dos endpoints obrigatórios.
+Para acessar as rotas protegidas (rotas de ML), primeiro obtenha um token de acesso.
 
-### Health Check
+#### Realizar Login
+* **Endpoint:** `POST /api/v1/login`
+* **Descrição:** Autentica o usuário e retorna um token de acesso JWT.
+* **Credenciais:**
+    * `username`: `admin`
+    * `password`: `admin123`
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "token_type": "bearer"
+    }
+    ```
+
+### Endpoints de Negócio
+
+#### Health Check
 
 Verifica o status da API e a conexão com o banco de dados.
 
@@ -119,7 +152,7 @@ Verifica o status da API e a conexão com o banco de dados.
     }
     ```
 
-### Listar Todos os Livros
+#### Listar Todos os Livros
 
 Retorna a lista completa de livros disponíveis.
 
@@ -139,12 +172,12 @@ Retorna a lista completa de livros disponíveis.
     ]
     ```
 
-### Buscar Livro por ID
+#### Buscar Livro por ID
 
 Retorna os detalhes de um livro específico.
 
 * **Endpoint:** `GET /api/v1/books/{book_id}`
-* **Exemplo de Chamada:** `http://127.0.0.1:8000/api/v1/books/10`
+* **Exemplo de Chamada:** `http://127.0.0.1:8000/api/v1/books/11`
 * **Exemplo de Resposta (Sucesso):**
     ```json
     {
@@ -164,7 +197,7 @@ Retorna os detalhes de um livro específico.
     }
     ```
 
-### Buscar Livros por Título e/ou Categoria
+#### Buscar Livros por Título e/ou Categoria
 
 Busca livros com base em filtros.
 
@@ -188,7 +221,7 @@ Busca livros com base em filtros.
     ]
     ```
 
-### Listar Todas as Categorias
+#### Listar Todas as Categorias
 
 Retorna uma lista de todas as categorias únicas de livros.
 
@@ -204,6 +237,67 @@ Retorna uma lista de todas as categorias únicas de livros.
         "Classics",
         "..."
       ]
+    }
+
+
+### Endpoints de Machine Learning
+
+Estes endpoints foram criados para facilitar o ciclo de vida de modelos de ML.
+
+**Atenção:** Todos os endpoints nesta seção requerem autenticação. Você deve primeiro obter um token através do endpoint `/login` e incluí-lo no header `Authorization` como `Bearer <seu_token>`.
+
+#### Processar e Salvar Features
+* **Endpoint:** `GET /api/v1/ml/features`
+* **Descrição:** Este endpoint lê os dados brutos da tabela `books`, realiza uma engenharia de features básica (convertendo `rating` e `availability` para formato numérico) e salva o resultado na tabela `ml_data`. Ele retorna os dados que foram salvos.
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    [
+      {
+        "id": 1,
+        "book_id": 1,
+        "price": 51.77,
+        "rating_numeric": 3,
+        "availability_numeric": 22,
+        "category": "Poetry"
+      }
+    ]
+    ```
+
+#### Obter Dataset de Treinamento
+* **Endpoint:** `GET /api/v1/ml/training-data`
+* **Descrição:** Lê os dados da tabela `ml_data` (criada pelo endpoint `/features`) e retorna o dataset final, pronto para ser usado no treinamento de um modelo.
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    {
+      "training_dataset": [
+        {
+          "id": 1,
+          "book_id": 1,
+          "price": 51.77,
+          "rating_numeric": 3,
+          "availability_numeric": 22,
+          "category": "Poetry"
+        }
+      ]
+    }
+    ```
+
+#### Realizar Predições (Simulação)
+* **Endpoint:** `POST /api/v1/ml/predictions`
+* **Descrição:** Este é um endpoint de **simulação** que demonstra como um modelo de ML poderia ser servido. Ele recebe dados de um livro e retorna uma predição de rating baseada em uma lógica simples, sem o uso de um modelo real treinado.
+* **Exemplo de Requisição (Corpo):**
+    ```json
+    {
+      "price": 45.99,
+      "category": "Mystery",
+      "availability_numeric": 15
+    }
+    ```
+* **Exemplo de Resposta (Sucesso):**
+    ```json
+    {
+      "predicted_rating": "Four",
+      "confidence_score": 0.88
     }
 
 ---
@@ -228,3 +322,14 @@ Ao rodar o script, você verá os **logs do processo sendo exibidos em tempo rea
 Além disso, o script produzirá o seguinte resultado:
 
 * **Arquivo de Dados:** Será criada uma pasta `data/` na raiz do projeto e dentro dela o arquivo `books.csv`. Este arquivo conterá todos os dados dos livros extraídos e será sobrescrito a cada nova execução para garantir que os dados estejam sempre atualizados.
+
+---
+
+## Licença
+
+Este repositório é destinado a um projeto de pós-graduação em Machine Learning Engineering da FIAP. O conteúdo está disponível sob a **Licença MIT**, sendo de livre uso para fins educacionais e de desenvolvimento.
+
+**Alunos:**
+Gustavo Niewerth - RM 366500
+Michel de Oliveira Hilgemberg - RM365928
+
