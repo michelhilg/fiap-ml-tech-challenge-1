@@ -1,4 +1,8 @@
+# Arquivos e pastas do Ambiente Virtual do Python
 /venv
+
+# Pastas de cache do Python
 app/__pycache__
 
+# Arquivo de metadados do sistema operacional macOS
 .DS_Store

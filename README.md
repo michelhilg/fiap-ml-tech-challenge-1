@@ -26,6 +26,8 @@ O sistema é dividido em três componentes principais que garantem a modulariza�
 3.  **API RESTful (`app/`):**
     * **Função:** Expõe os dados armazenados no banco de dados através de uma série de endpoints RESTful.
 
+> Para uma visão mais detalhada da arquitetura do projeto, incluindo planos de escalabilidade e integração com modelos de ML, consulte o documento de **Plano Arquitetural** localizado na pasta `/docs`.
+
 ### Estrutura de Diretórios
 
 A estrutura foi organizada em módulos para separar as responsabilidades da API geral das de Machine Learning.
@@ -47,6 +49,7 @@ A estrutura foi organizada em módulos para separar as responsabilidades da API 
 ├── data/                 # Armazena os dados
 │   ├── books.csv         # Dados brutos do scraper
 │   └── data.db           # Banco de dados SQLite
+├── docs/                 # Armazena documentações do projeto
 ├── scripts/              # Scripts auxiliares
 │   └── scraper.py        # Script de web scraping
 └── requirements.txt      # Dependências do projeto
@@ -109,13 +112,12 @@ O servidor estará disponível em `http://127.0.0.1:8000`.
 
 ---
 
-### Documentação das Rotas da API
+## Documentação e Rotas da API
 
 A API gera documentação interativa automaticamente. Com o servidor rodando, acesse:
 * **Swagger UI:** `http://127.0.0.1:8000/docs`
 * **ReDoc:** `http://127.0.0.1:8000/redoc`
 
----
 
 ### Endpoints de Autenticação
 
@@ -175,7 +177,7 @@ Retorna a lista completa de livros disponíveis.
 Retorna os detalhes de um livro específico.
 
 * **Endpoint:** `GET /api/v1/books/{book_id}`
-* **Exemplo de Chamada:** `http://127.0.0.1:8000/api/v1/books/10`
+* **Exemplo de Chamada:** `http://127.0.0.1:8000/api/v1/books/11`
 * **Exemplo de Resposta (Sucesso):**
     ```json
     {
@@ -237,7 +239,6 @@ Retorna uma lista de todas as categorias únicas de livros.
       ]
     }
 
----
 
 ### Endpoints de Machine Learning
 
@@ -321,3 +322,14 @@ Ao rodar o script, você verá os **logs do processo sendo exibidos em tempo rea
 Além disso, o script produzirá o seguinte resultado:
 
 * **Arquivo de Dados:** Será criada uma pasta `data/` na raiz do projeto e dentro dela o arquivo `books.csv`. Este arquivo conterá todos os dados dos livros extraídos e será sobrescrito a cada nova execução para garantir que os dados estejam sempre atualizados.
+
+---
+
+## Licença
+
+Este repositório é destinado a um projeto de pós-graduação em Machine Learning Engineering da FIAP. O conteúdo está disponível sob a **Licença MIT**, sendo de livre uso para fins educacionais e de desenvolvimento.
+
+**Alunos:**
+Gustavo Niewerth - RM 366500
+Michel de Oliveira Hilgemberg - RM365928
+
